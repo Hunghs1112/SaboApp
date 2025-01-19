@@ -1,21 +1,34 @@
 {
   "expo": {
-    "name": "SaboApp",
+    "name": "Order Việt Trung",
     "slug": "SaboApp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
+    "entryPoint": "./node_modules/expo-router/entry.js",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "ios": {
+      "bundleIdentifier": "com.yourname.imagesearch",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app needs access to your camera to take pictures."
+      }
+    }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "package": "com.hunghoang1112.SaboApp"
     },
     "web": {
       "bundler": "metro",
@@ -23,6 +36,12 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      [
+      "expo-image-picker",
+      {
+        "photosPermission": "The app accesses your photos to let you share them with your friends."
+      }
+    ],
       "expo-router",
       [
         "expo-splash-screen",
@@ -36,6 +55,14 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "d68768f6-9643-476b-a586-fd017ab71c2b"
+      }
+    } 
   }
 }
