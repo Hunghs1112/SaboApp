@@ -7,6 +7,8 @@ import { AuthContext } from "../context/AuthContext";
 import { router, useRouter } from 'expo-router';
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
+import DeviceInfo from 'react-native-device-info'; // Import react-native-device-info
+
 export default function AccountScreen() {
   const { user, logout } = useContext(AuthContext); // Logout function from AuthContext
   const [showBalance, setShowBalance] = useState(false); // State để ẩn/hiện số dư
@@ -15,6 +17,9 @@ export default function AccountScreen() {
   const [balanceVND, setBalanceVND] = useState(0); // Số dư tài khoản VND
   const [exchangeRate, setExchangeRate] = useState(0); // Tỷ giá
   const [loading, setLoading] = useState(true); // Loading state
+  const [apiVersion, setApiVersion] = useState(null); // State to store the version from API
+  const [isVersionMatch, setIsVersionMatch] = useState(false); // State to track version match
+
   const serviceItems = [
     { title: "Cơ cấu biểu phí", icon: "document-text-outline", link: "https://help.sabomall.com/bieu-phi/co-cau-bieu-phi" },
     { title: "Quy định chính sách", icon: "newspaper-outline", link: "https://help.sabomall.com/faq/cau-hoi-thuong-gap/5.-chinh-sach" },
@@ -22,8 +27,23 @@ export default function AccountScreen() {
     { title: "Hướng dẫn", icon: "book-outline", link: "https://help.sabomall.com/huong-dan/tren-may-tinh/huong-dan-dat-don-hang-tren-sabomall" },
     { title: "Trợ giúp", icon: "headset-outline", link: "https://help.sabomall.com/huong-dan/tren-dien-thoai-app-mobile" },
   ]
+  // Fetch device info and version
+  useEffect(() => {
+    const fetchDeviceInfo = async () => {
+      const version = await DeviceInfo.getVersion();
+      setApiVersion(version); // Store device version
+      // Fetch the API version
+      try {
+        const response = await api.get("/version");
+        const apiVersion = response.data.version;
+        setIsVersionMatch(apiVersion === version); // Compare API version with device version
+      } catch (err) {
+        console.error("Error fetching version:", err);
+      }
+    };
 
-
+    fetchDeviceInfo(); // Call fetchDeviceInfo on mount
+  }, []);
 
   const toggleBalanceVisibility = () => {
     setShowBalance(!showBalance); // Đổi trạng thái ẩn/hiện số dư
@@ -175,57 +195,49 @@ export default function AccountScreen() {
   </View>
 </View>
 
-<View style={styles.section}>
-  <View style={styles.sectionHeader}>
-    <Text style={styles.sectionTitle}>
-      Tài khoản trả trước{" "}
-      <TouchableOpacity onPress={toggleBalanceVisibility}>
-        <Icon
-          name={showBalance ? "eye-outline" : "eye-off-outline"}
-          size={24}
-          color="#333"
-        />
-      </TouchableOpacity>
-    </Text>
-  </View>
+{!isVersionMatch && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>
+              Tài khoản trả trước{" "}
+              <TouchableOpacity onPress={toggleBalanceVisibility}>
+                <Icon
+                  name={showBalance ? "eye-outline" : "eye-off-outline"}
+                  size={24}
+                  color="#333"
+                />
+              </TouchableOpacity>
+            </Text>
+          </View>
 
-  {/* Hiển thị số dư VND và CNY */}
-  {loading ? (
-    <ActivityIndicator size="small" color="#ff5c1c" />
-  ) : (
-    <View>
-      <View style={styles.row}>
-        {/* Việt Nam Đồng
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Việt Nam Đồng</Text>
-          <Text style={styles.cardBalance}>
-            {showBalance
-              ? `${parseInt(balanceVND).toLocaleString()} đ`
-              : "********"}
-          </Text>
-        </View> */}
+          {/* Display balance in VND and CNY */}
+          {loading ? (
+            <ActivityIndicator size="small" color="#ff5c1c" />
+          ) : (
+            <View>
+              <View style={styles.row}>
+                {/* Nhân Dân Tệ */}
+                <View style={styles.card}>
+                  <Text style={styles.cardTitle}>Nhân Dân Tệ</Text>
+                  <Text style={styles.cardBalance}>
+                    {showBalance
+                      ? `${(balanceVND / exchangeRate).toFixed(2)} ¥`
+                      : "********"}
+                  </Text>
+                </View>
+              </View>
 
-        {/* Nhân Dân Tệ */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Nhân Dân Tệ</Text>
-          <Text style={styles.cardBalance}>
-            {showBalance
-              ? `${(balanceVND / exchangeRate).toFixed(2)} ¥`
-              : "********"}
-          </Text>
+              {/* Recharge Button */}
+              <TouchableOpacity
+                style={styles.rechargeButton}
+                onPress={() => router.push({ pathname: "/recharge", params: { userId: user.id } })}
+              >
+                <Text style={styles.rechargeButtonText}>Nạp tiền</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
-      </View>
-
-      {/* Nút Nạp tiền */}
-      <TouchableOpacity
-        style={styles.rechargeButton}
-        onPress={() => router.push({ pathname: "/recharge", params: { userId: user.id } })}
-      >
-        <Text style={styles.rechargeButtonText}>Nạp tiền</Text>
-      </TouchableOpacity>
-    </View>
-  )}
-</View>
+      )}
 
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Tiện ích</Text>
