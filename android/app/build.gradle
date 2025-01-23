@@ -86,7 +86,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.hunghoang1112.SaboApp"
+    namespace 'com.hunghoang1112.SaboApp'
     defaultConfig {
         applicationId 'com.hunghoang1112.SaboApp'
         minSdkVersion rootProject.ext.minSdkVersion
