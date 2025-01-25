@@ -12,11 +12,12 @@
     "ios": {
       "supportsTablet": true,
       "ios": {
-      "bundleIdentifier": "com.yourname.imagesearch",
-      "infoPlist": {
-        "NSCameraUsageDescription": "This app needs access to your camera to take pictures."
-      }
-    }
+        "bundleIdentifier": "com.yourname.imagesearch",
+        "infoPlist": {
+          "NSCameraUsageDescription": "This app needs access to your camera to take pictures."
+        }
+      },
+      "bundleIdentifier": "com.hunghoang1112.SaboApp"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,9 +25,10 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ],
       "package": "com.hunghoang1112.SaboApp"
     },
@@ -37,11 +39,11 @@
     },
     "plugins": [
       [
-      "expo-image-picker",
-      {
-        "photosPermission": "The app accesses your photos to let you share them with your friends."
-      }
-    ],
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends."
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",
@@ -63,6 +65,6 @@
       "eas": {
         "projectId": "d68768f6-9643-476b-a586-fd017ab71c2b"
       }
-    } 
+    }
   }
 }
