@@ -1,10 +1,11 @@
-import React, {useState, useEffect}from 'react';
-import { Text, View, TextInput, StyleSheet, Button, ScrollView, Linking, Image, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Text, View, TextInput, StyleSheet, Button, ScrollView, Linking, Image, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { cards, categories, images, imageicons, categories2, categories3 } from '../constants/data'
 import api from '../constants/api';
 import { useRouter } from 'expo-router';
 import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
+import DeviceInfo from 'react-native-device-info'; // Import react-native-device-info
 
 import { searchProducts, getProductDetail } from '../constants/alibabaApi'
 export default function Index() {
@@ -22,15 +23,35 @@ export default function Index() {
   const router = useRouter();
   const [searchKeyword, setSearchKeyword] = useState('');
   const [telegramLink, setTelegramLink] = useState("");
+  const [apiVersion, setApiVersion] = useState(null);
+  const [isVersionMatch, setIsVersionMatch] = useState(false); // State to track version match import
   const handleNavigateToSearch = () => {
     router.push("/search-page"); // Điều hướng đến trang tìm kiếm
   };
-  
-  
+
+// Fetch device info and version
+useEffect(() => {
+  const fetchDeviceInfo = async () => {
+    const version = await DeviceInfo.getVersion();
+    setApiVersion(version); // Store device version
+  Alert(version);
+    // Fetch the API version
+    try {
+      const response = await api.get("/version");
+      const apiVersion = response.data.version;
+      setIsVersionMatch(apiVersion === version); // Compare API version with device version
+    } catch (err) {
+      console.error("Error fetching version:", err);
+    }
+  };
+
+  fetchDeviceInfo(); // Call fetchDeviceInfo on mount
+}, []);
+
   const fetchProductsByCategory = async (categoryId) => {
     setLoading(true);
     setSelectedCategory(categoryId);
-  
+
     try {
       const response = await searchProducts(categoryId, 0, 20); // Tìm sản phẩm theo danh mục
       setProducts(Array.isArray(response.data?.data) ? response.data.data : []); // Gán sản phẩm trả về
@@ -41,142 +62,149 @@ export default function Index() {
       setLoading(false);
     }
   };
-  
- // Fetch the image icons and links from the backend
- useEffect(() => {
-  const fetchLinks = async () => {
-    try {
-      const response = await api.get("/get-links"); // Fetch the links from this endpoint
-      setTelegramLink(response.data.telegram_link); // Set the Telegram link from response
-    } catch (error) {
-      console.error("Error fetching links:", error);
-      Alert.alert("Error", "Unable to fetch icon links.");
+
+
+  // Fetch the image icons and links from the backend
+
+  useEffect(() => {
+    const fetchLinks = async () => {
+      try {
+        const response = await api.get("/get-links"); // Fetch the links from this endpoint
+        setTelegramLink(response.data.telegram_link); // Set the Telegram link from response
+      } catch (error) {
+        console.error("Error fetching links:", error);
+        Alert.alert("Error", "Unable to fetch icon links.");
+      }
+    };
+
+    fetchLinks();
+  }, []);
+  const handlePress = () => {
+    if (telegramLink) {
+      // Open the Telegram link
+      Linking.openURL(telegramLink).catch((err) => console.error("Failed to open Telegram link:", err));
+    } else {
+      Alert.alert("Error", "Telegram link is not available.");
     }
   };
-
-  fetchLinks();
-}, []);
-const handlePress = () => {
-  if (telegramLink) {
-    // Open the Telegram link
-    Linking.openURL(telegramLink).catch((err) => console.error("Failed to open Telegram link:", err));
-  } else {
-    Alert.alert("Error", "Telegram link is not available.");
-  }
-};
   // Gọi API khi chọn danh mục mặc định
   useEffect(() => {
     fetchProductsByCategory(categories[0].id);
   }, []);
 
-  return ( <SafeAreaView style={styles.safeArea}>
-    <View style={{ flex: 1, backgroundColor :'#ccc'}}>
-    
-    <View style={styles.searchBar}>
-      <Icon name="camera-outline" size={24} color="gray" />
-      <TouchableOpacity onPress={handleNavigateToSearch} style={{ flex: 1 }}>
-    <TextInput
-      style={styles.searchInput}
-      placeholder="Tìm kiếm sản phẩm..."
-      editable={false} // Không cho phép nhập ở trang hiện tại
-    />
-  </TouchableOpacity>
-  <TouchableOpacity onPress={handleNavigateToSearch}>
-    <Icon name="search-outline" size={24} color="#ff5c1c" />
-  </TouchableOpacity>
-  
-    </View>
+  return (<SafeAreaView style={styles.safeArea}>
+    <View style={{ flex: 1, backgroundColor: '#ccc' }}>
+
+      <View style={styles.searchBar}>
+        <Icon name="camera-outline" size={24} color="gray" />
+        <TouchableOpacity onPress={handleNavigateToSearch} style={{ flex: 1 }}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Tìm kiếm sản phẩm..."
+            editable={false} // Không cho phép nhập ở trang hiện tại
+          />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleNavigateToSearch}>
+          <Icon name="search-outline" size={24} color="#ff5c1c" />
+        </TouchableOpacity>
+
+      </View>
+
       <ScrollView style={{ flex: 1 }}>
-        <View style={styles.contentContainer}>
-        <View style={styles.sliderContainer}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false} 
-            pagingEnabled 
-            style={styles.imageSlider}
-          >
-            {images.map((image, index) => (
-              <Image 
+
+        {isVersionMatch && (
+          <View style={styles.contentContainer}>
+            <View style={styles.sliderContainer}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                pagingEnabled
+                style={styles.imageSlider}
+              >
+                {images.map((image, index) => (
+                  <Image
+                    key={index}
+                    source={{ uri: image }}
+                    style={styles.sliderImage}
+                    resizeMode="stretch"
+                  />
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+        )}
+
+        <View style={styles.imageSection}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {imageicons.map((item, index) => (
+              <TouchableOpacity
                 key={index}
-                source={{ uri: image }}
-                style={styles.sliderImage}
-                 resizeMode="stretch"
-              />
+                style={styles.imageContainer}
+                onPress={handlePress}
+              >
+                <Image source={{ uri: item.uri }} style={styles.iconImage} />
+                <Text style={styles.imageLabel}>{item.label}</Text>
+              </TouchableOpacity>
             ))}
-          </ScrollView> 
-          </View>  
+          </ScrollView>
         </View>
 
-      <View style={styles.imageSection}>
-  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-    {imageicons.map((item, index) => (
-      <TouchableOpacity
-        key={index}
-        style={styles.imageContainer}
-        onPress={handlePress}
-      >
-        <Image source={{ uri: item.uri }} style={styles.iconImage} />
-        <Text style={styles.imageLabel}>{item.label}</Text>
-      </TouchableOpacity>
-    ))}
-  </ScrollView>
-</View>
-{/* Danh mục */}
-<View style={styles.categorySection}>
-  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-    {categories.map((category) => (
-      <TouchableOpacity
-        key={category.id}
-        style={[
-          styles.cardContainer, // Sử dụng style từ phần cardContainer để đảm bảo giao diện đồng bộ
-          selectedCategory === category.id && styles.selectedCategory, // Highlight danh mục được chọn
-        ]}
-        onPress={() => fetchProductsByCategory(category.id)}
-      >
-        <Text style={styles.cardTitle}>{category.name}</Text>
-      </TouchableOpacity>
-    ))}
-  </ScrollView>
-</View>
+        {/* Danh mục */}
+        <View style={styles.categorySection}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {categories.map((category) => (
+              <TouchableOpacity
+                key={category.id}
+                style={[
+                  styles.cardContainer, // Sử dụng style từ phần cardContainer để đảm bảo giao diện đồng bộ
+                  selectedCategory === category.id && styles.selectedCategory, // Highlight danh mục được chọn
+                ]}
+                onPress={() => fetchProductsByCategory(category.id)}
+              >
+                <Text style={styles.cardTitle}>{category.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
 
-<View style={styles.productSection}>
-  <Text style={styles.sectionTitle}>Sản phẩm theo danh mục</Text>
-  {loading ? (
-    <ActivityIndicator size="large" color="#ff5c1c" />
-  ) : products.length > 0 ? (
-    <View style={styles.productGrid}>
-      {products.map((product, index) => (
-        <TouchableOpacity
-        key={product.offerId || index}
-        style={styles.productCard}
-        onPress={() => router.push(`/productDetail?id=${product.offerId}`)} // Truyền offerId
-      >
-        <Image
-          source={{
-            uri: product.imageUrl || "https://via.placeholder.com/150",
-          }}
-          style={styles.productImage}
-        />
-        <Text style={styles.productTitle}>
-          {product.subjectTrans && product.subjectTrans.length > 30
-            ? `${product.subjectTrans.slice(0, 30)}...`
-            : product.subjectTrans || product.subject}
-        </Text>
-        <Text style={styles.productPrice}>
-Bấm để xem chi tiết
-</Text>
+        <View style={styles.productSection}>
+          <Text style={styles.sectionTitle}>Sản phẩm theo danh mục</Text>
+          {loading ? (
+            <ActivityIndicator size="large" color="#ff5c1c" />
+          ) : products.length > 0 ? (
+            <View style={styles.productGrid}>
+              {products.map((product, index) => (
+                <TouchableOpacity
+                  key={product.offerId || index}
+                  style={styles.productCard}
+                  onPress={() => router.push(`/productDetail?id=${product.offerId}`)} // Truyền offerId
+                >
+                  <Image
+                    source={{
+                      uri: product.imageUrl || "https://via.placeholder.com/150",
+                    }}
+                    style={styles.productImage}
+                  />
+                  <Text style={styles.productTitle}>
+                    {product.subjectTrans && product.subjectTrans.length > 30
+                      ? `${product.subjectTrans.slice(0, 30)}...`
+                      : product.subjectTrans || product.subject}
+                  </Text>
+                  <Text style={styles.productPrice}>
+                    Bấm để xem chi tiết
+                  </Text>
 
-      </TouchableOpacity>
-      
-      ))}
-    </View>
-  ) : (
-    <Text style={styles.noProductsText}>Không có sản phẩm nào!</Text>
-  )}
-</View>
+                </TouchableOpacity>
+
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.noProductsText}>Không có sản phẩm nào!</Text>
+          )}
+        </View>
       </ScrollView>
     </View>
-    </SafeAreaView>
+  </SafeAreaView>
   );
 }
 
@@ -213,7 +241,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor:'white',
+    backgroundColor: 'white',
   },
   sliderContainer: {
     height: 200, // Height of the slider
@@ -231,7 +259,7 @@ const styles = StyleSheet.create({
     marginRight: 2, // Space between images in the slider
   },
   imageSection: {
-    marginTop: 5,
+    marginTop: 50,
     height: 100, // Adjust height as needed
     marginBottom: 15, // Space between the image section and next section
     backgroundColor: 'white'
@@ -388,7 +416,6 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   categorySection: {
-marginTop: -5,
+    marginTop: -5,
   }
 });
-  

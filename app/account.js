@@ -146,9 +146,9 @@ export default function AccountScreen() {
           />
           <Text style={styles.username}>{user?.username || "Tài khoản của bạn"}</Text>
         </View>
-        <TouchableOpacity style={styles.settingsIcon}>
+        {/* <TouchableOpacity style={styles.settingsIcon}>
           <Icon name="settings-outline" size={24} color="#333" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Tỷ giá */}

@@ -199,7 +199,7 @@ export default function ProductDetailScreen() {
   <Text style={styles.sellerTitle}>Thông tin người bán:</Text>
   <View style={styles.sellerInfo}>
     <Text style={styles.sellerName}>Tên: {product.sellerNickName || "Không có thông tin"}</Text>
-    {product.sellerShopUrl ? (
+    {/* {product.sellerShopUrl ? (
       <TouchableOpacity
         onPress={() => Linking.openURL(product.sellerShopUrl)} // Mở liên kết shop
       >
@@ -207,7 +207,7 @@ export default function ProductDetailScreen() {
       </TouchableOpacity>
     ) : (
       <Text style={styles.sellerNoLink}>Shop: Không có liên kết</Text>
-    )}
+    )} */}
   </View>
 </View>
     {/* Mô tả sản phẩm */}
